@@ -101,12 +101,14 @@ Alternatively, you can deploy without a GPU by using:
 
 - Access to [Meta Llama](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct/) models
 - Access to [Meta Llama Guard](https://huggingface.co/meta-llama/Llama-Guard-3-8B/) models (optional)
-- **OpenShift cluster admin access** required for:
-  - Installing ClusterRole resources for OAuth authentication
-  - Creating namespaces
-  - Deploying workloads with GPU resources
-  - Creating persistent volume claims
-  - Managing secrets and config maps
+- **OpenShift cluster admin access** is **optional** - see [Deployment Without Cluster Admin](#deployment-without-cluster-admin) section below
+  - When OAuth is enabled (default), cluster admin is required for:
+    - Installing ClusterRole resources for OAuth authentication
+  - For namespace-scoped deployment, you need:
+    - Namespace admin access (to create namespaces, or use an existing namespace)
+    - Permission to deploy workloads with GPU resources (if using GPU)
+    - Permission to create persistent volume claims
+    - Permission to manage secrets and config maps
 
 ## Installation
 
@@ -220,6 +222,43 @@ LLM_URL= <your-llm-url>\
 SAFETY=llama-guard-3-8b \
 SAFETY_URL= <your-safety-model-url>
 ```
+
+#### Deployment Without Cluster Admin
+
+If you don't have cluster admin rights, you can deploy the application without OAuth authentication. This mode uses a simplified authentication approach suitable for development or restricted environments.
+
+**Important Notes:**
+- Without OAuth, the application runs in a development-like mode with simplified authentication
+- User identification will be based on headers or default dev users
+- This mode is suitable for testing, development, or environments where OAuth setup is not possible
+
+To deploy without OAuth (and without requiring cluster admin):
+
+```bash
+make install \
+  NAMESPACE=ai-virtual-agent \
+  LLM=llama-3-1-8b-instruct \
+  SAFETY=llama-guard-3-8b \
+  --set oauth.enabled=false
+```
+
+Or using Helm directly:
+
+```bash
+cd deploy/cluster
+helm install ai-virtual-agent helm \
+  --namespace ai-virtual-agent \
+  --create-namespace \
+  --set oauth.enabled=false \
+  --set llm-service.model=llama-3-1-8b-instruct \
+  --set safety-service.model=llama-guard-3-8b
+```
+
+**What changes when OAuth is disabled:**
+- No ClusterRoleBinding is created (no cluster admin required)
+- OAuth proxy container is not deployed
+- Route points directly to the application service
+- Application runs with `LOCAL_DEV_ENV_MODE=true` for simplified authentication
 
 When prompted, enter your **[Hugging Face Token](https://huggingface.co/settings/tokens)** and your **[Tavily API Key](https://tavily.com/)** for enhanced web search capabilities.
 

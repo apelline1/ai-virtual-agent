@@ -26,8 +26,8 @@ serviceAccount:
   # Automatically mount a ServiceAccount's API credentials?
   automount: true
   # Annotations to add to the service account
-  annotations:
-    serviceaccounts.openshift.io/oauth-redirectreference.ai-virtual-agent: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"ai-virtual-agent-authenticated"}}'
+  # OAuth redirect reference is only needed when OAuth is enabled
+  annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: "ai-virtual-agent-proxy-sa"
@@ -49,6 +49,12 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+
+# OAuth proxy configuration
+# Set to false to deploy without OAuth (useful when cluster admin rights are not available)
+# When disabled, authentication will be handled differently - see documentation
+oauth:
+  enabled: true
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -89,15 +95,8 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes:
-  - name: secret-ai-virtual-agent-tls
-    secret:
-      defaultMode: 420
-      secretName: ai-virtual-agent-tls
-  - name: secret-ai-virtual-agent-proxy
-    secret:
-      defaultMode: 420
-      secretName: ai-virtual-agent-proxy
+# OAuth-related volumes are only created when oauth.enabled=true
+volumes: []
 # - name: foo
 #   secret:
 #     secretName: mysecret

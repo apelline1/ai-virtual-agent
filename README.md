@@ -57,7 +57,9 @@ For a full working version with local inference:
 
 ### Required user permissions
 
-- **Cluster admin access** - Required for installing ClusterRole resources for OAuth authentication
+- **Cluster admin access** - Optional, only required if using OAuth authentication (default)
+  - For deployment without cluster admin, see [Deployment Without Cluster Admin](#deployment-without-cluster-admin) section
+  - Without OAuth, you only need namespace admin access
 
 
 ## Deploy
@@ -88,6 +90,16 @@ cd deploy/cluster
 # Install with interactive prompts for configuration
 make install NAMESPACE=your-namespace
 ```
+
+#### Deployment Without Cluster Admin
+
+If you don't have cluster admin rights, you can deploy without OAuth authentication:
+
+```bash
+make install NAMESPACE=your-namespace EXTRA_HELM_ARGS="--set oauth.enabled=false" LLM=llama-3-1-8b-instruct SAFETY=llama-guard-3-8b
+```
+
+**Note:** Without OAuth, the application uses simplified authentication suitable for development or restricted environments. See [INSTALLING.md](INSTALLING.md) for more details.
 
 🧭 **[Advanced instructions →](#advanced-instructions)**
 

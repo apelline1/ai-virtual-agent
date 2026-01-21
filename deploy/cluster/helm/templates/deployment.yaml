@@ -50,6 +50,7 @@ spec:
               done
               echo "$url is ready."
       containers:
+        {{- if .Values.oauth.enabled }}
         - name: oauth-proxy
           args:
             - -provider=openshift
@@ -81,6 +82,7 @@ spec:
               name: secret-ai-virtual-agent-tls
             - mountPath: /etc/proxy/secrets
               name: secret-ai-virtual-agent-proxy
+        {{- end }}
 
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
@@ -118,6 +120,8 @@ spec:
               value: '{{ .Values.llama_stack_url }}'
             - name: INGESTION_PIPELINE_URL
               value: http://{{ .Release.Name }}-ingestion-pipeline
+            - name: LOCAL_DEV_ENV_MODE
+              value: '{{ if not .Values.oauth.enabled }}true{{ else }}false{{ end }}'
             {{- if .Values.seed.admin_user.username }}
             - name: ADMIN_USERNAME
               value: '{{ .Values.seed.admin_user.username }}'
@@ -146,10 +150,20 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
       volumes:
+        {{- if .Values.oauth.enabled }}
+        - name: secret-ai-virtual-agent-tls
+          secret:
+            defaultMode: 420
+            secretName: ai-virtual-agent-tls
+        - name: secret-ai-virtual-agent-proxy
+          secret:
+            defaultMode: 420
+            secretName: ai-virtual-agent-proxy
+        {{- end }}
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
